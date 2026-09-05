@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LetterPro — Professional Letter Writing Service</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #fafaf9;
+      --surface: #ffffff;
+      --border: #e7e5e4;
+      --text: #1c1917;
+      --text-secondary: #78716c;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --success: #16a34a;
+      --warning: #ca8a04;
+      --danger: #dc2626;
+      --space-xs: 8px;
+      --space-sm: 16px;
+      --space-md: 24px;
+      --space-lg: 48px;
+      --space-xl: 80px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    h1, h2, h3, h4 { font-family: 'DM Sans', sans-serif; font-weight: 700; }
+
+    a { color: inherit; text-decoration: none; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 var(--space-md); }
+
+    /* Navbar */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      background: rgba(250, 250, 249, 0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: var(--space-sm) 0;
+    }
+
+    .navbar .container {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .logo {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1.5rem; font-weight: 700;
+      color: var(--text);
+    }
+
+    .logo span { color: var(--accent); }
+
+    .nav-links { display: flex; gap: var(--space-md); list-style: none; }
+
+    .nav-links a {
+      font-size: 0.875rem; font-weight: 500;
+      color: var(--text-secondary);
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--accent); }
+
+    .nav-buttons { display: flex; gap: var(--space-sm); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: var(--space-xs);
+      padding: 10px 20px; font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem; font-weight: 600;
+      border: none; border-radius: 6px; cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn:active { transform: scale(0.98); }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh; display: flex; align-items: center;
+      padding-top: 80px; position: relative; overflow: hidden;
+    }
+
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 30% 20%, rgba(37, 99, 235, 0.08) 0%, transparent 50%),
+                  radial-gradient(ellipse at 70% 80%, rgba(37, 99, 235, 0.05) 0%, transparent 40%);
+      pointer-events: none;
+    }
+
+    .hero-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl);
+      align-items: center;
+    }
+
+    .hero-content { position: relative; z-index: 1; }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(37, 99, 235, 0.1); color: var(--accent);
+      padding: 6px 12px; border-radius: 20px;
+      font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+      margin-bottom: var(--space-md);
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      margin-bottom: var(--space-md);
+      line-height: 1.1;
+    }
+
+    .hero p {
+      font-size: 1.125rem; color: var(--text-secondary);
+      max-width: 500px; margin-bottom: var(--space-lg);
+    }
+
+    .hero-buttons { display: flex; gap: var(--space-sm); flex-wrap: wrap; }
+
+    .hero-image {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: var(--space-lg);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+    }
+
+    .hero-image-placeholder {
+      background: linear-gradient(135deg, var(--accent) 0%, #3b82f6 100%);
+      border-radius: 12px; height: 300px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 4rem;
+    }
+
+    /* Sections */
+    section { padding: var(--space-xl) 0; }
+
+    .section-header { text-align: center; margin-bottom: var(--space-lg); }
+    .section-header h2 { font-size: 2rem; margin-bottom: var(--space-sm); }
+    .section-header p { color: var(--text-secondary); max-width: 600px; margin: 0 auto; }
+
+    /* How It Works */
+    .steps-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-md);
+    }
+
+    .step-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: var(--space-md);
+      text-align: center; transition: all 0.2s;
+    }
+
+    .step-card:hover { transform: translateY(-4px); box-shadow: 0 10px 40px rgba(0,0,0,0.08); }
+
+    .step-number {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--accent); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'DM Sans', sans-serif; font-size: 1.25rem; font-weight: 700;
+      margin: 0 auto var(--space-sm);
+    }
+
+    .step-card h3 { font-size: 1.125rem; margin-bottom: var(--space-xs); }
+    .step-card p { color: var(--text-secondary); font-size: 0.875rem; }
+
+    /* Pricing */
+    .pricing { background: var(--surface); }
+
+    .pricing-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-md);
+      max-width: 900px; margin: 0 auto;
+    }
+
+    .pricing-card {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: var(--space-md);
+      text-align: center; position: relative;
+      transition: all 0.2s;
+    }
+
+    .pricing-card:hover { transform: translateY(-4px); box-shadow: 0 10px 40px rgba(0,0,0,0.08); }
+
+    .pricing-card.featured {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    .pricing-card.featured::before {
+      content: 'Best Value'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: var(--accent); color: white; font-size: 0.75rem; font-weight: 600;
+      padding: 4px 12px; border-radius: 20px;
+    }
+
+    .pricing-card h3 { font-size: 1.25rem; margin-bottom: var(--space-xs); }
+
+    .pricing-card .price {
+      font-family: 'JetBrains Mono', monospace; font-size: 2.5rem; font-weight: 500;
+      color: var(--accent); margin-bottom: var(--space-sm);
+    }
+
+    .pricing-card .price span { font-size: 1rem; color: var(--text-secondary); }
+
+    .pricing-card ul { list-style: none; margin-bottom: var(--space-md); }
+    .pricing-card ul li {
+      padding: var(--space-xs) 0; color: var(--text-secondary); font-size: 0.875rem;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+
+    .pricing-card ul li i { color: var(--success); width: 16px; height: 16px; }
+
+    .trial-badge {
+      background: rgba(22, 163, 74, 0.1); color: var(--success);
+      padding: 8px 16px; border-radius: 8px; font-size: 0.875rem; font-weight: 600;
+      margin-top: var(--space-sm); display: inline-block;
+    }
+
+    /* FAQ */
+    .faq-grid { max-width: 700px; margin: 0 auto; }
+
+    .faq-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: var(--space-md); margin-bottom: var(--space-sm);
+    }
+
+    .faq-item h4 { font-size: 1rem; margin-bottom: var(--space-xs); }
+    .faq-item p { color: var(--text-secondary); font-size: 0.875rem; }
+
+    /* Footer */
+    footer {
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: var(--space-lg) 0;
+    }
+
+    footer .container {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    footer p { color: var(--text-secondary); font-size: 0.875rem; }
+
+    .social-links { display: flex; gap: var(--space-sm); }
+    .social-links a {
+      width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border); border-radius: 50%;
+      color: var(--text-secondary); transition: all 0.2s;
+    }
+
+    .social-links a:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Animations */
+    .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s, transform 0.6s; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .hero-grid { grid-template-columns: 1fr; text-align: center; }
+      .hero p { margin: 0 auto var(--space-lg); }
+      .hero-buttons { justify-content: center; }
+      .hero-image { display: none; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      footer .container { flex-direction: column; gap: var(--space-md); text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="/" class="logo">Letter<span>Pro</span></a>
+      <ul class="nav-links">
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+      <div class="nav-buttons">
+        <a href="login.html" class="btn btn-secondary">Login</a>
+        <a href="register.html" class="btn btn-primary">Get Started</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-content">
+          <div class="hero-badge fade-in">
+            <i data-lucide="sparkles" width="14" height="14"></i>
+            Professional Letter Writing Service
+          </div>
+          <h1 class="fade-in">Expert Letters,<br>Delivered to Your Email</h1>
+          <p class="fade-in">Upload a picture or describe what you need. We'll craft a professional letter and send it straight to your recipient's inbox.</p>
+          <div class="hero-buttons fade-in">
+            <a href="register.html" class="btn btn-primary">Start Free Trial</a>
+            <a href="#how-it-works" class="btn btn-secondary">Learn More</a>
+          </div>
+        </div>
+        <div class="hero-image fade-in">
+          <div class="hero-image-placeholder">
+            <i data-lucide="mail-check" width="64" height="64"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section id="how-it-works">
+    <div class="container">
+      <div class="section-header fade-in">
+        <h2>How It Works</h2>
+        <p>Three simple steps to get your professionally crafted letter</p>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card fade-in">
+          <div class="step-number">1</div>
+          <h3>Upload or Describe</h3>
+          <p>Upload a picture of your handwritten text or describe the letter you need with all the details.</p>
+        </div>
+        <div class="step-card fade-in">
+          <div class="step-number">2</div>
+          <h3>We Write</h3>
+          <p>Our expert writers craft a polished, professional letter tailored to your specific needs.</p>
+        </div>
+        <div class="step-card fade-in">
+          <div class="step-number">3</div>
+          <h3>Delivered</h3>
+          <p>Receive your completed letter via email, ready to print or send directly to your recipient.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="pricing" id="pricing">
+    <div class="container">
+      <div class="section-header fade-in">
+        <h2>Simple, Transparent Pricing</h2>
+        <p>Choose the turnaround time that works for you</p>
+      </div>
+      <div class="pricing-grid">
+        <div class="pricing-card fade-in">
+          <h3>Normal</h3>
+          <div class="price">₦1,000</div>
+          <ul>
+            <li><i data-lucide="check" width="16" height="16"></i> 7 days delivery</li>
+            <li><i data-lucide="check" width="16" height="16"></i> Professional writing</li>
+            <li><i data-lucide="check" width="16" height="16"></i> Email delivery</li>
+            <li><i data-lucide="check" width="16" height="16"></i> 1 revision</li>
+          </ul>
+          <a href="register.html" class="btn btn-secondary">Get Started</a>
+        </div>
+        <div class="pricing-card featured fade-in">
+          <h3>Medium</h3>
+          <div class="price">₦2,500</div>
+          <ul>
+            <li><i data-lucide="check" width="16" height="16"></i> 3 days delivery</li>
+            <li><i data-lucide="check" width="16" height="16"></i> Professional writing</li>
+            <li><i data-lucide="check" width="16" height="16"></i> Email delivery</li>
+            <li><i data-lucide="check" width="16" height="16"></i> 2 revisions</li>
+          </ul>
+          <a href="register.html" class="btn btn-primary">Get Started</a>
+        </div>
+        <div class="pricing-card fade-in">
+          <h3>Fast</h3>
+          <div class="price">₦5,000</div>
+          <ul>
+            <li><i data-lucide="check" width="16" height="16"></i> 24 hours delivery</li>
+            <li><i data-lucide="check" width="16" height="16"></i> Priority writing</li>
+            <li><i data-lucide="check" width="16" height="16"></i> Email delivery</li>
+            <li><i data-lucide="check" width="16" height="16"></i> Unlimited revisions</li>
+          </ul>
+          <a href="register.html" class="btn btn-secondary">Get Started</a>
+        </div>
+      </div>
+      <div style="text-align: center; margin-top: var(--space-lg);">
+        <span class="trial-badge fade-in">
+          <i data-lucide="gift" width="16" height="16" style="vertical-align: middle;"></i>
+          First letter FREE — 1 week trial for new users!
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="container">
+      <div class="section-header fade-in">
+        <h2>Frequently Asked Questions</h2>
+        <p>Got questions? We've got answers</p>
+      </div>
+      <div class="faq-grid">
+        <div class="faq-item fade-in">
+          <h4>What types of letters can you write?</h4>
+          <p>We handle all types: recommendation letters, cover letters, complaint letters, request letters, thank you letters, and more. Just describe what you need!</p>
+        </div>
+        <div class="faq-item fade-in">
+          <h4>How does the free trial work?</h4>
+          <p>New users get their first letter completely free. No credit card required to sign up. Just create an account and submit your first request.</p>
+        </div>
+        <div class="faq-item fade-in">
+          <h4>Can I upload a handwritten draft?</h4>
+          <p>Yes! Upload a clear photo or scan of your handwritten draft, and we'll transcribe and polish it into a professional letter.</p>
+        </div>
+        <div class="faq-item fade-in">
+          <h4>How do I pay?</h4>
+          <p>After your letter is complete, you'll receive a payment link. We accept bank transfers and other local payment methods.</p>
+        </div>
+        <div class="faq-item fade-in">
+          <h4>Can I request revisions?</h4>
+          <p>Yes! You can request revisions based on your plan. Fast users get unlimited revisions, Medium gets 2, and Normal gets 1.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section style="background: var(--accent); color: white; text-align: center;">
+    <div class="container" style="padding: var(--space-xl) var(--space-md);">
+      <h2 style="margin-bottom: var(--space-sm);">Ready to Get Started?</h2>
+      <p style="margin-bottom: var(--space-md); opacity: 0.9;">Your first letter is on us. No credit card required.</p>
+      <a href="register.html" class="btn" style="background: white; color: var(--accent);">Create Free Account</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <a href="/" class="logo">Letter<span>Pro</span></a>
+      <div style="display: flex; gap: 24px; font-size: 0.875rem;">
+        <a href="terms.html" style="color: var(--text-secondary);">Terms of Service</a>
+        <a href="privacy.html" style="color: var(--text-secondary);">Privacy Policy</a>
+      </div>
+      <p>&copy; 2026 LetterPro. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    lucide.createIcons();
+
+    // Scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
