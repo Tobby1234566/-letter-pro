@@ -13,6 +13,8 @@ const helmet = require('helmet');
 const { initDatabase, getDb, run, get, all, exec, saveDatabase } = require('./database');
 
 const app = express();
+// Render terminates TLS at its reverse proxy; trust it so secure session cookies work.
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
 // Initialize database before starting server
