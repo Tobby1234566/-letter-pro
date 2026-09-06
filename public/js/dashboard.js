@@ -14,6 +14,23 @@ async function checkAuth() {
   }
 }
 
+// CSRF Token management
+let csrfToken = null;
+
+async function fetchCsrfToken() {
+  try {
+    const res = await fetch('/api/auth/csrf-token');
+    const data = await res.json();
+    csrfToken = data.csrfToken;
+  } catch (err) {
+    console.error('Failed to fetch CSRF token');
+  }
+}
+
+function getCsrfHeaders() {
+  return csrfToken ? { 'X-CSRF-Token': csrfToken } : {};
+}
+
 // Initialize
 let currentUser = null;
 let selectedPriority = 'medium';
@@ -22,6 +39,7 @@ async function init() {
   currentUser = await checkAuth();
   if (!currentUser) return;
 
+  await fetchCsrfToken();
   document.getElementById('userName').textContent = currentUser.name;
   lucide.createIcons();
 
@@ -37,7 +55,7 @@ async function init() {
 function setupEventListeners() {
   // Logout
   document.getElementById('logoutBtn').addEventListener('click', async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    await fetch('/api/auth/logout', { method: 'POST', headers: getCsrfHeaders() });
     window.location.href = 'login.html';
   });
 
@@ -159,6 +177,7 @@ function setupEventListeners() {
       try {
         const res = await fetch(`/api/requests/${window.currentSubmittedRequestId}/receipt`, {
           method: 'POST',
+          headers: getCsrfHeaders(),
           body: formData
         });
 
@@ -333,6 +352,7 @@ async function handleSubmit(e) {
   try {
     const res = await fetch('/api/requests', {
       method: 'POST',
+      headers: getCsrfHeaders(),
       body: formData
     });
 
@@ -500,6 +520,7 @@ function setupViewRequestModal() {
       try {
         const res = await fetch(`/api/requests/${currentViewRequestId}/receipt`, {
           method: 'POST',
+          headers: getCsrfHeaders(),
           body: formData
         });
 

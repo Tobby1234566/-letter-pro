@@ -18,6 +18,23 @@ async function checkAuth() {
   }
 }
 
+// CSRF Token management
+let csrfToken = null;
+
+async function fetchCsrfToken() {
+  try {
+    const res = await fetch('/api/auth/csrf-token');
+    const data = await res.json();
+    csrfToken = data.csrfToken;
+  } catch (err) {
+    console.error('Failed to fetch CSRF token');
+  }
+}
+
+function getCsrfHeaders() {
+  return csrfToken ? { 'X-CSRF-Token': csrfToken } : {};
+}
+
 let currentUser = null;
 let currentRequest = null;
 
@@ -25,6 +42,7 @@ async function init() {
   currentUser = await checkAuth();
   if (!currentUser) return;
 
+  await fetchCsrfToken();
   lucide.createIcons();
   loadStats();
   loadRequests();
@@ -34,7 +52,7 @@ async function init() {
 function setupEventListeners() {
   // Logout
   document.getElementById('logoutBtn').addEventListener('click', async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    await fetch('/api/auth/logout', { method: 'POST', headers: getCsrfHeaders() });
     window.location.href = 'login.html';
   });
 
@@ -232,7 +250,7 @@ function openModal(request) {
 
 async function markAsPaid(id) {
   try {
-    const res = await fetch(`/api/admin/requests/${id}/mark-paid`, { method: 'PUT' });
+    const res = await fetch(`/api/admin/requests/${id}/mark-paid`, { method: 'PUT', headers: getCsrfHeaders() });
     if (res.ok) {
       showAlert('Marked as paid!', 'success');
       if (currentRequest && currentRequest.id === id) {
@@ -255,7 +273,7 @@ async function saveLetter(id) {
   try {
     const res = await fetch(`/api/admin/requests/${id}/letter`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getCsrfHeaders() },
       body: JSON.stringify({ letter_content: letterContent })
     });
 
@@ -279,7 +297,7 @@ async function approvePayment(id) {
   if (!confirm('Approve this payment?')) return;
 
   try {
-    const res = await fetch(`/api/admin/requests/${id}/approve-payment`, { method: 'POST' });
+    const res = await fetch(`/api/admin/requests/${id}/approve-payment`, { method: 'POST', headers: getCsrfHeaders() });
 
     if (res.ok) {
       showAlert('Payment approved!', 'success');
@@ -299,7 +317,7 @@ async function sendLetter(id) {
   if (!confirm('Send this letter to the recipient?')) return;
 
   try {
-    const res = await fetch(`/api/admin/requests/${id}/send`, { method: 'POST' });
+    const res = await fetch(`/api/admin/requests/${id}/send`, { method: 'POST', headers: getCsrfHeaders() });
     const data = await res.json();
 
     if (res.ok) {

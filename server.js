@@ -6,6 +6,9 @@ const multer = require('multer');
 const nodemailer = require('nodemailer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 const { initDatabase, getDb, run, get, all, exec, saveDatabase } = require('./database');
 
 const app = express();
@@ -47,13 +50,55 @@ async function startServer() {
     secret: process.env.SESSION_SECRET || 'letter-service-secret-key',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000
+    }
   }));
 
   // Middleware
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   app.use(express.static(path.join(__dirname, 'public')));
+
+  // Security headers
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:"],
+        connectSrc: ["'self'"],
+        frameSrc: ["'none'"],
+        objectSrc: ["'none'"]
+      }
+    },
+    crossOriginEmbedderPolicy: false
+  }));
+
+  // Rate limiting for auth endpoints
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // 10 attempts per window
+    message: { error: 'Too many attempts. Please try again after 15 minutes.' },
+    standardHeaders: true,
+    legacyHeaders: false
+  });
+
+  // General API rate limit
+  const apiLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 100, // 100 requests per minute
+    message: { error: 'Too many requests. Please slow down.' },
+    standardHeaders: true,
+    legacyHeaders: false
+  });
+
+  app.use('/api/', apiLimiter);
 
   // SMTP Transport
   const transporter = nodemailer.createTransport({
@@ -78,9 +123,39 @@ async function startServer() {
     next();
   };
 
+  // CSRF protection middleware (Double Submit Cookie pattern)
+  const csrfProtection = (req, res, next) => {
+    const csrfToken = req.cookies?.csrfToken;
+    const requestToken = req.headers['x-csrf-token'];
+
+    if (!csrfToken || !requestToken || csrfToken !== requestToken) {
+      return res.status(403).json({ error: 'Invalid CSRF token' });
+    }
+    next();
+  };
+
+  // Generate CSRF token
+  app.get('/api/auth/csrf-token', (req, res) => {
+    const token = crypto.randomBytes(32).toString('hex');
+    res.cookie('csrfToken', token, {
+      httpOnly: false, // Must be readable by JS
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+    });
+    res.json({ csrfToken: token });
+  });
+
+  // Serve admin.html only to admins
+  app.get('/admin.html', (req, res) => {
+    if (!req.session.userId || req.session.role !== 'admin') {
+      return res.redirect('/login.html');
+    }
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+  });
+
   // ============ AUTH ROUTES ============
 
-  app.post('/api/auth/register', (req, res) => {
+  app.post('/api/auth/register', authLimiter, csrfProtection, (req, res) => {
     try {
       const { name, email, password } = req.body;
       if (!name || !email || !password) {
@@ -112,7 +187,7 @@ async function startServer() {
     }
   });
 
-  app.post('/api/auth/login', (req, res) => {
+  app.post('/api/auth/login', authLimiter, (req, res) => {
     try {
       const { email, password } = req.body;
       if (!email || !password) {
@@ -138,7 +213,7 @@ async function startServer() {
     }
   });
 
-  app.post('/api/auth/logout', (req, res) => {
+  app.post('/api/auth/logout', csrfProtection, (req, res) => {
     req.session.destroy();
     res.json({ success: true });
   });
@@ -152,7 +227,7 @@ async function startServer() {
 
   // ============ USER REQUEST ROUTES ============
 
-  app.post('/api/requests', requireAuth, upload.single('file'), async (req, res) => {
+  app.post('/api/requests', requireAuth, csrfProtection, upload.single('file'), async (req, res) => {
     try {
       const { type, letter_type, subject, description, recipient_email, priority } = req.body;
 
@@ -325,7 +400,7 @@ async function startServer() {
   });
 
   // Upload payment receipt
-  app.post('/api/requests/:id/receipt', requireAuth, upload.single('receipt'), (req, res) => {
+  app.post('/api/requests/:id/receipt', requireAuth, csrfProtection, upload.single('receipt'), (req, res) => {
     try {
       // Verify the request belongs to this user
       const request = get('SELECT * FROM requests WHERE id = ? AND user_id = ?', [req.params.id, req.session.userId]);
@@ -400,7 +475,7 @@ async function startServer() {
     }
   });
 
-  app.put('/api/admin/requests/:id/status', requireAdmin, (req, res) => {
+  app.put('/api/admin/requests/:id/status', requireAdmin, csrfProtection, (req, res) => {
     try {
       const { status } = req.body;
       run('UPDATE requests SET status = ?, updated_at = datetime(\'now\') WHERE id = ?', [status, req.params.id]);
@@ -411,7 +486,7 @@ async function startServer() {
     }
   });
 
-  app.put('/api/admin/requests/:id/letter', requireAdmin, (req, res) => {
+  app.put('/api/admin/requests/:id/letter', requireAdmin, csrfProtection, (req, res) => {
     try {
       const { letter_content } = req.body;
       run(
@@ -425,7 +500,7 @@ async function startServer() {
     }
   });
 
-  app.put('/api/admin/requests/:id/mark-paid', requireAdmin, async (req, res) => {
+  app.put('/api/admin/requests/:id/mark-paid', requireAdmin, csrfProtection, async (req, res) => {
     try {
       // Get request details before updating
       const request = get('SELECT r.*, u.name as user_name, u.email as user_email FROM requests r JOIN users u ON r.user_id = u.id WHERE r.id = ?', [req.params.id]);
@@ -511,7 +586,7 @@ async function startServer() {
   });
 
   // Approve payment (from submitted receipt)
-  app.post('/api/admin/requests/:id/approve-payment', requireAdmin, async (req, res) => {
+  app.post('/api/admin/requests/:id/approve-payment', requireAdmin, csrfProtection, async (req, res) => {
     try {
       const request = get('SELECT * FROM requests WHERE id = ?', [req.params.id]);
       if (!request) return res.status(404).json({ error: 'Request not found' });
@@ -561,7 +636,7 @@ async function startServer() {
     }
   });
 
-  app.post('/api/admin/requests/:id/send', requireAdmin, async (req, res) => {
+  app.post('/api/admin/requests/:id/send', requireAdmin, csrfProtection, async (req, res) => {
     try {
       const request = get('SELECT * FROM requests WHERE id = ?', [req.params.id]);
       if (!request) return res.status(404).json({ error: 'Request not found' });
