@@ -730,14 +730,25 @@ ${request.letter_content || 'No content'}
     }
   });
 
-  // Serve uploaded files
-  app.get('/uploads/:filename', (req, res) => {
-    const filePath = path.join(__dirname, 'uploads', req.params.filename);
-    if (fs.existsSync(filePath)) {
-      res.sendFile(filePath);
-    } else {
-      res.status(404).send('File not found');
+  // Serve uploaded files only to the owning customer or an administrator.
+  app.get('/uploads/:filename', requireAuth, (req, res) => {
+    const filename = path.basename(req.params.filename);
+    if (filename !== req.params.filename) {
+      return res.status(404).send('File not found');
     }
+
+    if (req.session.role !== 'admin') {
+      const ownsFile = get(
+        `SELECT id FROM requests
+         WHERE user_id = ? AND (file_path = ? OR payment_receipt_path = ?)`,
+        [req.session.userId, filename, filename],
+      );
+      if (!ownsFile) return res.status(404).send('File not found');
+    }
+
+    const filePath = path.join(uploadsDir, filename);
+    if (!fs.existsSync(filePath)) return res.status(404).send('File not found');
+    res.sendFile(filePath);
   });
 
   // Start server
