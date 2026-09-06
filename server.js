@@ -7,6 +7,7 @@ const nodemailer = require('nodemailer');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const { initDatabase, getDb, run, get, all, exec, saveDatabase } = require('./database');
@@ -61,7 +62,7 @@ async function startServer() {
   // Middleware
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
-  app.use(express.static(path.join(__dirname, 'public')));
+  app.use(cookieParser());
 
   // Security headers
   app.use(helmet({
@@ -145,13 +146,16 @@ async function startServer() {
     res.json({ csrfToken: token });
   });
 
-  // Serve admin.html only to admins
+  // Serve admin.html only to authenticated administrators before public static files.
   app.get('/admin.html', (req, res) => {
     if (!req.session.userId || req.session.role !== 'admin') {
       return res.redirect('/login.html');
     }
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
   });
+
+  // Public assets and pages. Protected routes must be registered before this middleware.
+  app.use(express.static(path.join(__dirname, 'public')));
 
   // ============ AUTH ROUTES ============
 

@@ -122,6 +122,22 @@
     const form = document.getElementById('registerForm');
     const alert = document.getElementById('alert');
     const submitBtn = document.getElementById('submitBtn');
+    let csrfToken = null;
+
+    async function fetchCsrfToken() {
+      const res = await fetch('/api/auth/csrf-token');
+      const data = await res.json();
+      if (!res.ok || !data.csrfToken) {
+        throw new Error(data.error || 'Could not initialize secure registration.');
+      }
+      csrfToken = data.csrfToken;
+    }
+
+    fetchCsrfToken().catch((err) => {
+      alert.textContent = err.message;
+      alert.className = 'alert error';
+      alert.style.display = 'block';
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -136,7 +152,10 @@
       try {
         const res = await fetch('/api/auth/register', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken
+          },
           body: JSON.stringify({ name, email, password })
         });
 
