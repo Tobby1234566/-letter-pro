@@ -90,8 +90,9 @@ function getDb() {
 // Helper functions
 function run(sql, params = []) {
   db.run(sql, params);
+  const rowid = db.exec("SELECT last_insert_rowid()")[0]?.values[0]?.[0] || null;
   saveDatabase();
-  return { lastInsertRowid: db.exec("SELECT last_insert_rowid()")[0]?.values[0]?.[0] };
+  return { lastInsertRowid: rowid };
 }
 
 function get(sql, params = []) {

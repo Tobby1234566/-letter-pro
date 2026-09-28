@@ -186,7 +186,14 @@ async function startServer() {
       req.session.role = 'user';
       req.session.userName = name;
 
-      res.json({ success: true, user: { id: result.lastInsertRowid, name, email, role: 'user' } });
+      // Save session before responding
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ error: 'Registration failed' });
+        }
+        res.json({ success: true, user: { id: result.lastInsertRowid, name, email, role: 'user' } });
+      });
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: 'Registration failed' });
@@ -209,9 +216,16 @@ async function startServer() {
       req.session.role = user.role;
       req.session.userName = user.name;
 
-      res.json({
-        success: true,
-        user: { id: user.id, name: user.name, email: user.email, role: user.role }
+      // Save session before responding to ensure it's persisted before redirect
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ error: 'Login failed' });
+        }
+        res.json({
+          success: true,
+          user: { id: user.id, name: user.name, email: user.email, role: user.role }
+        });
       });
     } catch (err) {
       console.error(err);

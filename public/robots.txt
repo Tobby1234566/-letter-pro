@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://letterpro.com/sitemap.xml
+
+# Block admin and api routes
+Disallow: /admin.html
+Disallow: /api/
+Disallow: /uploads/
